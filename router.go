@@ -282,10 +282,12 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 
 	fileServer := http.FileServer(root)
 
-	r.HandlerFunc(http.MethodGet, path, func(w http.ResponseWriter, req *http.Request) {
+	var handler http.HandlerFunc = func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Path = GetValue(req.Context(), "filepath")
 		fileServer.ServeHTTP(w, req)
-	})
+	}
+	r.GET(path, handler)
+	r.HEAD(path, handler)
 }
 
 func (r *Router) recv(w http.ResponseWriter, req *http.Request) {

@@ -531,4 +531,12 @@ func TestRouterServeFiles(t *testing.T) {
 	if !mfs.opened {
 		t.Error("serving file failed")
 	}
+
+	mfs.opened = false
+
+	r, _ = http.NewRequest(http.MethodHead, "/favicon.ico", nil)
+	router.ServeHTTP(w, r)
+	if !mfs.opened {
+		t.Error("serving file failed")
+	}
 }
