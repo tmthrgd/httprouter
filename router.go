@@ -82,6 +82,13 @@ import (
 	"net/http"
 )
 
+type contextKey int
+
+const (
+	paramKey = contextKey(0)
+	panicKey = contextKey(1)
+)
+
 // Param is a single URL parameter, consisting of a key and a value.
 type Param struct {
 	Key   string
@@ -102,6 +109,25 @@ func (ps Params) ByName(name string) string {
 		}
 	}
 	return ""
+}
+
+// GetParams returns the Param-slice associated with a context.Context
+// if there is one, otherwise it returns nil.
+func GetParams(ctx context.Context) Params {
+	ps, _ := ctx.Value(paramKey).(Params)
+	return ps
+}
+
+// GetValue is short-hand for GetParams(ctx).ByName(name).
+func GetValue(ctx context.Context, name string) string {
+	ps, _ := ctx.Value(paramKey).(Params)
+	return ps.ByName(name)
+}
+
+// GetPanic returns the recovered panic value associated with a
+// context.Context.
+func GetPanic(ctx context.Context) interface{} {
+	return ctx.Value(panicKey)
 }
 
 // Router is a http.Handler which can be used to dispatch requests to different
