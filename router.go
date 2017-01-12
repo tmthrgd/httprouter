@@ -10,18 +10,19 @@
 //
 //  import (
 //      "fmt"
-//      "github.com/julienschmidt/httprouter"
+//      "github.com/tmthrgd/httprouter"
 //      "net/http"
 //      "log"
 //  )
 //
-//  func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//  var Index = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //      fmt.Fprint(w, "Welcome!\n")
-//  }
+//  })
 //
-//  func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-//      fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-//  }
+//  var Hello = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//      name := httprouter.GetValue(r.Context(), "name")
+//      fmt.Fprintf(w, "hello, %s!\n", name)
+//  })
 //
 //  func main() {
 //      router := httprouter.New()
@@ -65,8 +66,8 @@
 //   /files                              no match, but the router would redirect
 //
 // The value of parameters is saved as a slice of the Param struct, consisting
-// each of a key and a value. The slice is passed to the Handle func as a third
-// parameter.
+// each of a key and a value. The slice is accessable with the GetParams method.
+//
 // There are two ways to retrieve the value of a parameter:
 //  // by the name of the parameter
 //  user := ps.ByName("user") // defined by :user or *user
