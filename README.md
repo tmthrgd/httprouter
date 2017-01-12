@@ -1,4 +1,4 @@
-# HttpRouter [![Build Status](https://travis-ci.org/julienschmidt/httprouter.svg?branch=master)](https://travis-ci.org/julienschmidt/httprouter) [![GoDoc](https://godoc.org/github.com/julienschmidt/httprouter?status.svg)](http://godoc.org/github.com/julienschmidt/httprouter)
+# HttpRouter [![Build Status](https://travis-ci.org/tmthrgd/httprouter.svg?branch=master)](https://travis-ci.org/tmthrgd/httprouter) [![GoDoc](https://godoc.org/github.com/tmthrgd/httprouter?status.svg)](http://godoc.org/github.com/tmthrgd/httprouter)
 
 HttpRouter is a lightweight high performance HTTP request router (also called *multiplexer* or just *mux* for short) for [Go](https://golang.org/).
 
@@ -10,7 +10,7 @@ The router is optimized for high performance and a small memory footprint. It sc
 
 **Only explicit matches:** With other routers, like [`http.ServeMux`][http.ServeMux], a requested URL path could match multiple patterns. Therefore they have some awkward pattern priority rules, like *longest match* or *first registered, first matched*. By design of this router, a request can only match exactly one or no route. As a result, there are also no unintended matches, which makes it great for SEO and improves the user experience.
 
-**Stop caring about trailing slashes:** Choose the URL style you like, the router automatically redirects the client if a trailing slash is missing or if there is one extra. Of course it only does so, if the new path has a handler. If you don't like it, you can [turn off this behavior](https://godoc.org/github.com/julienschmidt/httprouter#Router.RedirectTrailingSlash).
+**Stop caring about trailing slashes:** Choose the URL style you like, the router automatically redirects the client if a trailing slash is missing or if there is one extra. Of course it only does so, if the new path has a handler. If you don't like it, you can [turn off this behavior](https://godoc.org/github.com/tmthrgd/httprouter#Router.RedirectTrailingSlash).
 
 **Path auto-correction:** Besides detecting the missing or additional trailing slash at no extra cost, the router can also fix wrong cases and remove superfluous path elements (like `../` or `//`). Is [CAPTAIN CAPS LOCK](http://www.urbandictionary.com/define.php?term=Captain+Caps+Lock) one of your users? HttpRouter can help him by making a case-insensitive look-up and redirecting him to the correct URL.
 
@@ -24,11 +24,11 @@ The router is optimized for high performance and a small memory footprint. It sc
 
 **Perfect for APIs:** The router design encourages to build sensible, hierarchical RESTful APIs. Moreover it has builtin native support for [OPTIONS requests](http://zacstewart.com/2012/04/14/http-options-method.html) and `405 Method Not Allowed` replies.
 
-Of course you can also set **custom [`NotFound`][Router.NotFound] and  [`MethodNotAllowed`](https://godoc.org/github.com/julienschmidt/httprouter#Router.MethodNotAllowed) handlers** and [**serve static files**][Router.ServeFiles].
+Of course you can also set **custom [`NotFound`][Router.NotFound] and  [`MethodNotAllowed`](https://godoc.org/github.com/tmthrgd/httprouter#Router.MethodNotAllowed) handlers** and [**serve static files**][Router.ServeFiles].
 
 ## Usage
 
-This is just a quick introduction, view the [GoDoc](http://godoc.org/github.com/julienschmidt/httprouter) for details.
+This is just a quick introduction, view the [GoDoc](http://godoc.org/github.com/tmthrgd/httprouter) for details.
 
 Let's start with a trivial example:
 
@@ -37,18 +37,19 @@ package main
 
 import (
     "fmt"
-    "github.com/julienschmidt/httprouter"
+    "github.com/tmthrgd/httprouter"
     "net/http"
     "log"
 )
 
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+var Index = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     fmt.Fprint(w, "Welcome!\n")
-}
+})
 
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-}
+var Hello = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    name := httprouter.GetValue(r.Context(), "name")
+    fmt.Fprintf(w, "hello, %s!\n", name)
+})
 
 func main() {
     router := httprouter.New()
@@ -61,7 +62,7 @@ func main() {
 
 ### Named parameters
 
-As you can see, `:name` is a *named parameter*. The values are accessible via `httprouter.Params`, which is just a slice of `httprouter.Param`s. You can get the value of a parameter either by its index in the slice, or by using the `ByName(name)` method: `:name` can be retrived by `ByName("name")`.
+As you can see, `:name` is a *named parameter*. The values are accessible via `httprouter.GetValue` which returns the value or `httprouter.GetParams` which returns a Param-slice. From the Param-slice, you can get the value of a parameter either by its index in the slice, or by using the `ByName(name)` method: `:name` can be retrived by `ByName("name")`.
 
 Named parameters only match a single path segment:
 
@@ -125,12 +126,6 @@ For even better scalability, the child nodes on each tree level are ordered by p
 └-
 ```
 
-## Why doesn't this work with `http.Handler`?
-
-**It does!** The router itself implements the `http.Handler` interface. Moreover the router provides convenient [adapters for `http.Handler`][Router.Handler]s and [`http.HandlerFunc`][Router.HandlerFunc]s which allows them to be used as a [`httprouter.Handle`][Router.Handle] when registering a route. The only disadvantage is, that no parameter values can be retrieved when a `http.Handler` or `http.HandlerFunc` is used, since there is no efficient way to pass the values with the existing function parameters. Therefore [`httprouter.Handle`][Router.Handle] has a third function parameter.
-
-Just try it out for yourself, the usage of HttpRouter is very straightforward. The package is compact and minimalistic, but also probably one of the easiest routers to set up.
-
 ## Where can I find Middleware *X*?
 
 This package just provides a very efficient request router with a few extra features. The router is just a [`http.Handler`][http.Handler], you can chain any http.Handler compatible middleware before the router, for example the [Gorilla handlers](http://www.gorillatoolkit.org/pkg/handlers). Or you could [just write your own](https://justinas.org/writing-http-middleware-in-go/), it's very easy!
@@ -189,17 +184,17 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/tmthrgd/httprouter"
 )
 
-func BasicAuth(h httprouter.Handle, requiredUser, requiredPassword string) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func BasicAuth(h http.Handler, requiredUser, requiredPassword string) http.Handler {
+	return func(w http.ResponseWriter, r *http.Request) {
 		// Get the Basic Authentication credentials
 		user, password, hasAuth := r.BasicAuth()
 
 		if hasAuth && user == requiredUser && password == requiredPassword {
 			// Delegate request to the given handle
-			h(w, r, ps)
+			h.ServeHTTP(w, r)
 		} else {
 			// Request Basic Authentication otherwise
 			w.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
@@ -208,13 +203,13 @@ func BasicAuth(h httprouter.Handle, requiredUser, requiredPassword string) httpr
 	}
 }
 
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+var Index = http.HanlderFunc(func(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Not protected!\n")
-}
+})
 
-func Protected(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+var Protected = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Protected!\n")
-}
+})
 
 func main() {
 	user := "gordon"
@@ -267,10 +262,9 @@ If the HttpRouter is a bit too minimalistic for you, you might try one of the fo
 [benchmark]: <https://github.com/julienschmidt/go-http-routing-benchmark>
 [http.Handler]: <https://golang.org/pkg/net/http/#Handler
 [http.ServeMux]: <https://golang.org/pkg/net/http/#ServeMux>
-[Router.Handle]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.Handle>
-[Router.HandleMethodNotAllowed]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.HandleMethodNotAllowed>
-[Router.Handler]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.Handler>
-[Router.HandlerFunc]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.HandlerFunc>
-[Router.NotFound]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.NotFound>
-[Router.PanicHandler]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.PanicHandler>
-[Router.ServeFiles]: <https://godoc.org/github.com/julienschmidt/httprouter#Router.ServeFiles>
+[Router.Handle]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.Handle>
+[Router.HandleMethodNotAllowed]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.HandleMethodNotAllowed>
+[Router.HandlerFunc]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.HandlerFunc>
+[Router.NotFound]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.NotFound>
+[Router.PanicHandler]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.PanicHandler>
+[Router.ServeFiles]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.ServeFiles>
