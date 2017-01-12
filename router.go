@@ -19,7 +19,7 @@
 //      fmt.Fprint(w, "Welcome!\n")
 //  })
 //
-//  var Hello = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//  var Hello = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //      name := httprouter.GetValue(r.Context(), "name")
 //      fmt.Fprintf(w, "hello, %s!\n", name)
 //  })
