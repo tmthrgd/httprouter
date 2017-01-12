@@ -6,6 +6,8 @@ In contrast to the [default mux][http.ServeMux] of Go's `net/http` package, this
 
 The router is optimized for high performance and a small memory footprint. It scales well even with very long paths and a large number of routes. A compressing dynamic trie (radix tree) structure is used for efficient matching.
 
+[github.com/tmthrgd/httprouter](http://godoc.org/github.com/tmthrgd/httprouter) is forked from [github.com/julienschmidt/httprouter](http://godoc.org/github.com/julienschmidt/httprouter) to only use the standard [`http.Handler`][http.Handler] interface for accessing url parameters, whereas the original uses a function with a third argument. It uses [`context.Context`][context.Context] and the [`Request.Context`][Request.Context] and [`Request.WithContext`][Request.WithContext] methods added to [`http.Request`][http.Request] in Go 1.7.
+
 ## Features
 
 **Only explicit matches:** With other routers, like [`http.ServeMux`][http.ServeMux], a requested URL path could match multiple patterns. Therefore they have some awkward pattern priority rules, like *longest match* or *first registered, first matched*. By design of this router, a request can only match exactly one or no route. As a result, there are also no unintended matches, which makes it great for SEO and improves the user experience.
@@ -240,25 +242,6 @@ router.NotFound = http.FileServer(http.Dir("public"))
 
 But this approach sidesteps the strict core rules of this router to avoid routing problems. A cleaner approach is to use a distinct sub-path for serving files, like `/static/*filepath` or `/files/*filepath`.
 
-## Web Frameworks based on HttpRouter
-
-If the HttpRouter is a bit too minimalistic for you, you might try one of the following more high-level 3rd-party web frameworks building upon the HttpRouter package:
-
-* [Ace](https://github.com/plimble/ace): Blazing fast Go Web Framework
-* [api2go](https://github.com/manyminds/api2go): A JSON API Implementation for Go
-* [Gin](https://github.com/gin-gonic/gin): Features a martini-like API with much better performance
-* [Goat](https://github.com/bahlo/goat): A minimalistic REST API server in Go
-* [Hikaru](https://github.com/najeira/hikaru): Supports standalone and Google AppEngine
-* [Hitch](https://github.com/nbio/hitch): Hitch ties httprouter, [httpcontext](https://github.com/nbio/httpcontext), and middleware up in a bow
-* [httpway](https://github.com/corneldamian/httpway): Simple middleware extension with context for httprouter and a server with gracefully shutdown support
-* [kami](https://github.com/guregu/kami): A tiny web framework using x/net/context
-* [Medeina](https://github.com/imdario/medeina): Inspired by Ruby's Roda and Cuba
-* [Neko](https://github.com/rocwong/neko): A lightweight web application framework for Golang
-* [River](https://github.com/abiosoft/river): River is a simple and lightweight REST server
-* [Roxanna](https://github.com/iamthemuffinman/Roxanna): An amalgamation of httprouter, better logging, and hot reload
-* [siesta](https://github.com/VividCortex/siesta): Composable HTTP handlers with contexts
-* [xmux](https://github.com/rs/xmux): xmux is a httprouter fork on top of xhandler (net/context aware)
-
 [benchmark]: <https://github.com/julienschmidt/go-http-routing-benchmark>
 [http.Handler]: <https://golang.org/pkg/net/http/#Handler
 [http.ServeMux]: <https://golang.org/pkg/net/http/#ServeMux>
@@ -268,3 +251,7 @@ If the HttpRouter is a bit too minimalistic for you, you might try one of the fo
 [Router.NotFound]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.NotFound>
 [Router.PanicHandler]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.PanicHandler>
 [Router.ServeFiles]: <https://godoc.org/github.com/tmthrgd/httprouter#Router.ServeFiles>
+[context.Context]: <https://golang.org/pkg/context/>
+[Request.Context]: <https://golang.org/pkg/net/http/#Request.Context>
+[Request.WithContext]: <https://golang.org/pkg/net/http/#Request.WithContext>
+[http.Request]: <https://golang.org/pkg/net/http/#Request>
