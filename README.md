@@ -154,7 +154,7 @@ func (hs HostSwitch) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	} else {
 		// Handle host names for wich no handler is registered
-		http.Error(w, "Forbidden", 403) // Or Redirect?
+		http.Error(w, "Forbidden", http.StatusForbidden) // Or Redirect?
 	}
 }
 

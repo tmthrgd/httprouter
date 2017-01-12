@@ -359,11 +359,11 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			handler.ServeHTTP(w, req.WithContext(ctx))
 			return
 		} else if req.Method != http.MethodConnect && path != "/" {
-			code := 301 // Permanent redirect, request with GET method
+			code := http.StatusMovedPermanently // Permanent redirect, request with GET method
 			if req.Method != http.MethodGet {
 				// Temporary redirect, request with same method
 				// As of Go 1.3, Go does not support status code 308.
-				code = 307
+				code = http.StatusTemporaryRedirect
 			}
 
 			if tsr && r.RedirectTrailingSlash {

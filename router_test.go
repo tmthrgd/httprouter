@@ -372,21 +372,21 @@ func TestRouterNotFound(t *testing.T) {
 		code   int
 		header string
 	}{
-		{"/path/", 301, "map[Location:[/path]]"},   // TSR -/
-		{"/dir", 301, "map[Location:[/dir/]]"},     // TSR +/
-		{"", 301, "map[Location:[/]]"},             // TSR +/
-		{"/PATH", 301, "map[Location:[/path]]"},    // Fixed Case
-		{"/DIR/", 301, "map[Location:[/dir/]]"},    // Fixed Case
-		{"/PATH/", 301, "map[Location:[/path]]"},   // Fixed Case -/
-		{"/DIR", 301, "map[Location:[/dir/]]"},     // Fixed Case +/
-		{"/../path", 301, "map[Location:[/path]]"}, // CleanPath
-		{"/nope", 404, ""},                         // NotFound
+		{"/path/", http.StatusMovedPermanently, "map[Location:[/path]]"},   // TSR -/
+		{"/dir", http.StatusMovedPermanently, "map[Location:[/dir/]]"},     // TSR +/
+		{"", http.StatusMovedPermanently, "map[Location:[/]]"},             // TSR +/
+		{"/PATH", http.StatusMovedPermanently, "map[Location:[/path]]"},    // Fixed Case
+		{"/DIR/", http.StatusMovedPermanently, "map[Location:[/dir/]]"},    // Fixed Case
+		{"/PATH/", http.StatusMovedPermanently, "map[Location:[/path]]"},   // Fixed Case -/
+		{"/DIR", http.StatusMovedPermanently, "map[Location:[/dir/]]"},     // Fixed Case +/
+		{"/../path", http.StatusMovedPermanently, "map[Location:[/path]]"}, // CleanPath
+		{"/nope", http.StatusNotFound, ""},                                 // NotFound
 	}
 	for _, tr := range testRoutes {
 		r, _ := http.NewRequest(http.MethodGet, tr.route, nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, r)
-		if !(w.Code == tr.code && (w.Code == 404 || fmt.Sprint(w.Header()) == tr.header)) {
+		if !(w.Code == tr.code && (w.Code == http.StatusNotFound || fmt.Sprint(w.Header()) == tr.header)) {
 			t.Errorf("NotFound handling route %s failed: Code=%d, Header=%v", tr.route, w.Code, w.Header())
 		}
 	}
@@ -394,13 +394,13 @@ func TestRouterNotFound(t *testing.T) {
 	// Test custom not found handler
 	var notFound bool
 	router.NotFound = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(404)
+		rw.WriteHeader(http.StatusNotFound)
 		notFound = true
 	})
 	r, _ := http.NewRequest(http.MethodGet, "/nope", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == 404 && notFound == true) {
+	if !(w.Code == http.StatusNotFound && notFound == true) {
 		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", w.Code, w.Header())
 	}
 
@@ -409,7 +409,7 @@ func TestRouterNotFound(t *testing.T) {
 	r, _ = http.NewRequest(http.MethodPatch, "/path/", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == 307 && fmt.Sprint(w.Header()) == "map[Location:[/path]]") {
+	if !(w.Code == http.StatusTemporaryRedirect && fmt.Sprint(w.Header()) == "map[Location:[/path]]") {
 		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", w.Code, w.Header())
 	}
 
@@ -419,7 +419,7 @@ func TestRouterNotFound(t *testing.T) {
 	r, _ = http.NewRequest(http.MethodGet, "/", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == 404) {
+	if !(w.Code == http.StatusNotFound) {
 		t.Errorf("NotFound handling route / failed: Code=%d", w.Code)
 	}
 }
