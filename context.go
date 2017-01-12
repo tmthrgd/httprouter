@@ -16,23 +16,6 @@ const (
 	panicKey = contextKey(1)
 )
 
-type paramName string
-
-type paramsContext struct {
-	context.Context
-	values Params
-}
-
-func (c paramsContext) Value(key interface{}) interface{} {
-	if key == paramKey {
-		return c.values
-	}
-	if key, ok := key.(paramName); ok {
-		return c.values.ByName(string(key))
-	}
-	return c.Context.Value(key)
-}
-
 // GetParams returns the Param-slice associated with a context.Context
 // if there is one, otherwise it returns nil.
 func GetParams(ctx context.Context) Params {
@@ -40,12 +23,10 @@ func GetParams(ctx context.Context) Params {
 	return ps
 }
 
-// GetParams returns the value of the first Param associated with a
-// context.Context which key matches the given name.
-// If no matching Param is found, an empty string is returned.
+// GetValue is short-hand for GetParams(ctx).ByName(name).
 func GetValue(ctx context.Context, name string) string {
-	val, _ := ctx.Value(paramName(name)).(string)
-	return val
+	ps, _ := ctx.Value(paramKey).(Params)
+	return ps.ByName(name)
 }
 
 // GetPanic returns the recovered panic value associated with a

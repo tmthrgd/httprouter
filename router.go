@@ -328,7 +328,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if root := r.trees[req.Method]; root != nil {
 		if handler, ps, tsr := root.getValue(path); handler != nil {
-			ctx := paramsContext{req.Context(), ps}
+			ctx := context.WithValue(req.Context(), paramKey, ps)
 			handler.ServeHTTP(w, req.WithContext(ctx))
 			return
 		} else if req.Method != "CONNECT" && path != "/" {
