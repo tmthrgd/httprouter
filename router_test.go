@@ -106,6 +106,14 @@ func TestRouterAPI(t *testing.T) {
 	router.DELETE("/DELETE", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		delete = true
 	}))
+	router.GETAndHEAD("/GETHEAD", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			get = true
+		case http.MethodHead:
+			head = true
+		}
+	}))
 	router.Handle(http.MethodGet, "/Handler", httpHandler)
 	router.HandlerFunc(http.MethodGet, "/HandlerFunc", func(w http.ResponseWriter, r *http.Request) {
 		handlerFunc = true
@@ -153,6 +161,20 @@ func TestRouterAPI(t *testing.T) {
 	router.ServeHTTP(w, r)
 	if !delete {
 		t.Error("routing DELETE failed")
+	}
+
+	get, head = false, false
+
+	r, _ = http.NewRequest(http.MethodGet, "/GETHEAD", nil)
+	router.ServeHTTP(w, r)
+	if !get {
+		t.Error("routing GET failed")
+	}
+
+	r, _ = http.NewRequest(http.MethodHead, "/GETHEAD", nil)
+	router.ServeHTTP(w, r)
+	if !head {
+		t.Error("routing HEAD failed")
 	}
 
 	r, _ = http.NewRequest(http.MethodGet, "/Handler", nil)

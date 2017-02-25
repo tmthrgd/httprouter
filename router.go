@@ -233,6 +233,12 @@ func (r *Router) DELETE(path string, handle http.Handler) {
 	r.Handle(http.MethodDelete, path, handle)
 }
 
+// GETAndHEAD is a shortcut for router.GET(path, handle) and router.HEAD(path, handle)
+func (r *Router) GETAndHEAD(path string, handle http.Handler) {
+	r.Handle(http.MethodGet, path, handle)
+	r.Handle(http.MethodHead, path, handle)
+}
+
 // Handle registers a new request handle with the given path and method.
 //
 // For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
@@ -281,13 +287,10 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 	}
 
 	fileServer := http.FileServer(root)
-
-	var handler http.HandlerFunc = func(w http.ResponseWriter, req *http.Request) {
+	r.GETAndHEAD(path, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Path = GetValue(req.Context(), "filepath")
 		fileServer.ServeHTTP(w, req)
-	}
-	r.GET(path, handler)
-	r.HEAD(path, handler)
+	}))
 }
 
 func (r *Router) recv(w http.ResponseWriter, req *http.Request) {
