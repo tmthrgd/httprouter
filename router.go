@@ -26,8 +26,8 @@
 //
 //  func main() {
 //      router := httprouter.New()
-//      router.GET("/", Index)
-//      router.GET("/hello/:name", Hello)
+//      router.Get("/", Index)
+//      router.Get("/hello/:name", Hello)
 //
 //      log.Fatal(http.ListenAndServe(":8080", router))
 //  }
@@ -163,7 +163,7 @@ type Router struct {
 
 	// If enabled, the router automatically replies to OPTIONS requests.
 	// Custom OPTIONS handlers take priority over automatic replies.
-	HandleOPTIONS bool
+	HandleOptions bool
 
 	// Configurable http.Handler which is called when no matching route is
 	// found. If it is not set, http.NotFound is used.
@@ -194,47 +194,47 @@ func New() *Router {
 		RedirectTrailingSlash:  true,
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
-		HandleOPTIONS:          true,
+		HandleOptions:          true,
 	}
 }
 
-// GET is a shortcut for router.Handle(http.MethodGet, path, handle)
-func (r *Router) GET(path string, handle http.Handler) {
+// Get is a shortcut for router.Handle(http.MethodGet, path, handle)
+func (r *Router) Get(path string, handle http.Handler) {
 	r.Handle(http.MethodGet, path, handle)
 }
 
-// HEAD is a shortcut for router.Handle(http.MethodHead, path, handle)
-func (r *Router) HEAD(path string, handle http.Handler) {
+// Head is a shortcut for router.Handle(http.MethodHead, path, handle)
+func (r *Router) Head(path string, handle http.Handler) {
 	r.Handle(http.MethodHead, path, handle)
 }
 
-// OPTIONS is a shortcut for router.Handle(http.MethodOptions, path, handle)
-func (r *Router) OPTIONS(path string, handle http.Handler) {
+// Options is a shortcut for router.Handle(http.MethodOptions, path, handle)
+func (r *Router) Options(path string, handle http.Handler) {
 	r.Handle(http.MethodOptions, path, handle)
 }
 
-// POST is a shortcut for router.Handle(http.MethodPost, path, handle)
-func (r *Router) POST(path string, handle http.Handler) {
+// Post is a shortcut for router.Handle(http.MethodPost, path, handle)
+func (r *Router) Post(path string, handle http.Handler) {
 	r.Handle(http.MethodPost, path, handle)
 }
 
-// PUT is a shortcut for router.Handle(http.MethodPut, path, handle)
-func (r *Router) PUT(path string, handle http.Handler) {
+// Put is a shortcut for router.Handle(http.MethodPut, path, handle)
+func (r *Router) Put(path string, handle http.Handler) {
 	r.Handle(http.MethodPut, path, handle)
 }
 
-// PATCH is a shortcut for router.Handle(http.MethodPatch, path, handle)
-func (r *Router) PATCH(path string, handle http.Handler) {
+// Patch is a shortcut for router.Handle(http.MethodPatch, path, handle)
+func (r *Router) Patch(path string, handle http.Handler) {
 	r.Handle(http.MethodPatch, path, handle)
 }
 
-// DELETE is a shortcut for router.Handle(http.MethodDelete, path, handle)
-func (r *Router) DELETE(path string, handle http.Handler) {
+// Delete is a shortcut for router.Handle(http.MethodDelete, path, handle)
+func (r *Router) Delete(path string, handle http.Handler) {
 	r.Handle(http.MethodDelete, path, handle)
 }
 
-// GETAndHEAD is a shortcut for router.GET(path, handle) and router.HEAD(path, handle)
-func (r *Router) GETAndHEAD(path string, handle http.Handler) {
+// GetAndHead is a shortcut for router.GET(path, handle) and router.HEAD(path, handle)
+func (r *Router) GetAndHead(path string, handle http.Handler) {
 	r.Handle(http.MethodGet, path, handle)
 	r.Handle(http.MethodHead, path, handle)
 }
@@ -287,7 +287,7 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 	}
 
 	fileServer := http.FileServer(root)
-	r.GETAndHEAD(path, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	r.GetAndHead(path, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Path = GetValue(req.Context(), "filepath")
 		fileServer.ServeHTTP(w, req)
 	}))
@@ -398,7 +398,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if req.Method == http.MethodOptions {
 		// Handle OPTIONS requests
-		if r.HandleOPTIONS {
+		if r.HandleOptions {
 			if allow := r.allowed(path, req.Method); len(allow) > 0 {
 				w.Header().Set("Allow", allow)
 				return
