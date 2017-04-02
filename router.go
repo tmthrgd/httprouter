@@ -130,6 +130,22 @@ func GetPanic(ctx context.Context) interface{} {
 	return ctx.Value(panicKey)
 }
 
+// PathHandler wraps a http.Handler and replaces the request URLs path with
+// the value of the filepath param. It must be used with a path that ends
+// with "/*filepath".
+func PathHandler(h http.Handler) http.Handler {
+	return &pathHandler{h}
+}
+
+type pathHandler struct {
+	http.Handler
+}
+
+func (h *pathHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	req.URL.Path = GetValue(req.Context(), "filepath")
+	h.Handler.ServeHTTP(w, req)
+}
+
 // Router is a http.Handler which can be used to dispatch requests to different
 // handler functions via configurable routes
 type Router struct {
@@ -286,11 +302,7 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 		panic("path must end with /*filepath in path '" + path + "'")
 	}
 
-	fileServer := http.FileServer(root)
-	r.GetAndHead(path, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		req.URL.Path = GetValue(req.Context(), "filepath")
-		fileServer.ServeHTTP(w, req)
-	}))
+	r.GetAndHead(path, PathHandler(http.FileServer(root)))
 }
 
 func (r *Router) recv(w http.ResponseWriter, req *http.Request) {
