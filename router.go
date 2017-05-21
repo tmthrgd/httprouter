@@ -142,8 +142,13 @@ type pathHandler struct {
 }
 
 func (h *pathHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	req.URL.Path = GetValue(req.Context(), "filepath")
-	h.Handler.ServeHTTP(w, req)
+	u := *req.URL
+	u.Path = GetValue(req.Context(), "filepath")
+
+	r := *req
+	r.URL = &u
+
+	h.Handler.ServeHTTP(w, &r)
 }
 
 // Router is a http.Handler which can be used to dispatch requests to different
