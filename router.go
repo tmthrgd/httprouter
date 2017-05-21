@@ -254,7 +254,7 @@ func (r *Router) Delete(path string, handle http.Handler) {
 	r.Handle(http.MethodDelete, path, handle)
 }
 
-// GetAndHead is a shortcut for router.GET(path, handle) and router.HEAD(path, handle)
+// GetAndHead is a shortcut for router.Get(path, handle) and router.Head(path, handle)
 func (r *Router) GetAndHead(path string, handle http.Handler) {
 	r.Handle(http.MethodGet, path, handle)
 	r.Handle(http.MethodHead, path, handle)
