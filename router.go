@@ -393,12 +393,15 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			}
 
 			if tsr && r.RedirectTrailingSlash {
+				u := *req.URL
+
 				if len(path) > 1 && path[len(path)-1] == '/' {
-					req.URL.Path = path[:len(path)-1]
+					u.Path = path[:len(path)-1]
 				} else {
-					req.URL.Path = path + "/"
+					u.Path = path + "/"
 				}
-				http.Redirect(w, req, req.URL.String(), code)
+
+				http.Redirect(w, req, u.String(), code)
 				return
 			}
 
@@ -409,8 +412,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 					r.RedirectTrailingSlash,
 				)
 				if found {
-					req.URL.Path = string(fixedPath)
-					http.Redirect(w, req, req.URL.String(), code)
+					u := *req.URL
+					u.Path = string(fixedPath)
+
+					http.Redirect(w, req, u.String(), code)
 					return
 				}
 			}
