@@ -79,6 +79,7 @@ package httprouter
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 )
 
@@ -118,14 +119,31 @@ func (ps Params) ByName(name string) string {
 // GetParams returns the Param-slice associated with a context.Context
 // if there is one, otherwise it returns nil.
 func GetParams(ctx context.Context) Params {
-	ps, _ := ctx.Value(paramKey).(Params)
-	return ps
+	if ps := ctx.Value(paramKey); ps != nil {
+		return *ps.(*Params)
+	}
+	return nil
 }
 
 // GetValue is short-hand for GetParams(ctx).ByName(name).
 func GetValue(ctx context.Context, name string) string {
-	ps, _ := ctx.Value(paramKey).(Params)
-	return ps.ByName(name)
+	return GetParams(ctx).ByName(name)
+}
+
+type paramsContext struct {
+	context.Context
+	ps Params
+}
+
+func (c *paramsContext) String() string {
+	return fmt.Sprintf("%v.WithValue(%#v, %#v)", c.Context, paramKey, &c.ps)
+}
+
+func (c *paramsContext) Value(key interface{}) interface{} {
+	if key == paramKey {
+		return &c.ps
+	}
+	return c.Context.Value(key)
 }
 
 // GetPanic returns the recovered panic value associated with a
@@ -382,8 +400,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if root := r.trees[req.Method]; root != nil {
 		if handler, ps, tsr := root.getValue(path); handler != nil {
 			if ps != nil {
-				ctx := context.WithValue(req.Context(), paramKey, ps)
-				req = req.WithContext(ctx)
+				req = req.WithContext(&paramsContext{req.Context(), ps})
 			}
 
 			handler.ServeHTTP(w, req)
