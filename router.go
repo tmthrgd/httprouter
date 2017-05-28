@@ -82,11 +82,15 @@ import (
 	"net/http"
 )
 
-type contextKey int
+// contextKey is a value for use with context.WithValue. It's used as
+// a pointer so it fits in an interface{} without allocation.
+type contextKey struct{ name string }
 
-const (
-	paramKey = contextKey(0)
-	panicKey = contextKey(1)
+func (k *contextKey) String() string { return "httprouter context value " + k.name }
+
+var (
+	paramKey = &contextKey{"param"}
+	panicKey = &contextKey{"panic"}
 )
 
 // Param is a single URL parameter, consisting of a key and a value.
